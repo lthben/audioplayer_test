@@ -4,25 +4,28 @@
   Description: 6 buttons. 6 sounds. A pair of neon flex led strips as a VU meter during playback. Teensy 3.2 with audio shield.
 */
 
+//-------------------- USER DEFINED SETTINGS --------------------//
+
+const int NUMFILES = 6, NUMBGFILES = 3; 
+
+//SDcard file names must have < 10 characters and only alphanumeric
+const char *playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"}; 
+const int dbLvl[NUMFILES] = {69, 50, 58, 47, 85, 72}; //base db levels
+
+const char *bgPlaylist[NUMBGFILES] = {"WILLBG1.WAV", "WILLBG2.WAV", "WILLBG3.WAV"};
+const int bgDbLvl[NUMBGFILES] = {78, 78, 78};
+
+const float MASTERVOL = 0.7; //0 - 1
+#define NUM_LEDS 26 //10cm per pixel
+#define BRIGHTNESS 255
+
+//-------------------- Audio --------------------//
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
 #include <Bounce.h>
-
-//USER DEFINED SETTINGS
-const int NUMFILES = 6, NUMBGFILES = 1; 
-
-const char *playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"};
-const int dbLvl[NUMFILES] = {69, 50, 58, 47, 85, 72}; //base db levels
-
-const char *bgPlaylist[NUMBGFILES] = {"WILLIAM0.WAV"};
-const int bgDbLvl[NUMBGFILES] = {78};
-
-const float MASTERVOL = 0.7; //0 - 1
-#define NUM_LEDS 26 //10cm per pixel
-#define BRIGHTNESS 255
 
 AudioPlaySdWav playSdWav1;
 AudioAnalyzePeak peak1;
@@ -34,6 +37,17 @@ AudioConnection patchCord3(playSdWav1, 0, peak1, 0);
 AudioConnection patchCord4(playSdWav1, 1, peak2, 0);
 AudioControlSGTL5000 sgtl5000_1;
 
+int fileNum = 0, bgFileNum = 0; // which background file to play
+int baseDbLvl; //of the current sound playing
+elapsedMillis msecs; //for peak sampling
+
+// Use these with the Teensy Audio Shield
+#define SDCARD_CS_PIN 10
+#define SDCARD_MOSI_PIN 7
+#define SDCARD_SCK_PIN 14
+
+//-------------------- Buttons --------------------//
+
 Bounce button0 = Bounce(0, 15); // 15 = 15 ms debounce time
 Bounce button1 = Bounce(1, 15);
 Bounce button2 = Bounce(2, 15);
@@ -41,28 +55,23 @@ Bounce button3 = Bounce(3, 15);
 Bounce button4 = Bounce(4, 15);
 Bounce button5 = Bounce(5, 15);
 
-int fileNum = 0, bgFileNum = 0; // which background file to play
-bool isButtonPressed = false;
-int baseDbLvl;
-elapsedMillis blinkTime, msecs;
+bool isButtonPressed = false; //track response to button triggered 
 
-// Use these with the Teensy Audio Shield
-#define SDCARD_CS_PIN 10
-#define SDCARD_MOSI_PIN 7
-#define SDCARD_SCK_PIN 14
-
+//-------------------- Light --------------------//
 #include <FastLED.h>
 
 #define LSTRIP_PIN 6
 #define RSTRIP_PIN 8
 
 #define LED_TYPE UCS1903
-#define COLOR_ORDER GRB
+#define COLOR_ORDER GRB //Yes! GRB! 
 
 CRGB lstrip[NUM_LEDS];
 CRGB rstrip[NUM_LEDS];
 
 #define UPDATES_PER_SECOND 100
+
+//-------------------- setup --------------------//
 
 void setup()
 {
@@ -100,11 +109,13 @@ void setup()
   delay(10);
 }
 
+//-------------------- loop --------------------//
+
 void loop()
 {
   read_pushbuttons();
 
-  if (isButtonPressed == true)
+  if (isButtonPressed == true) //process response to button press
   {
     if (playSdWav1.isPlaying() == true) playSdWav1.stop();
     const char *filename = playlist[fileNum];
@@ -112,6 +123,7 @@ void loop()
     delay(10);
     Serial.print("Start playing ");
     Serial.println(filename);
+    baseDbLvl = dbLvl[fileNum];
     isButtonPressed = false; //ready to start listening again for button presses
   }
 
@@ -123,12 +135,10 @@ void loop()
     delay(10);
     Serial.print("Start playing ");
     Serial.println(filename); 
+    baseDbLvl = bgDbLvl[bgFileNum];
   }
-
-  if (isButtonPressed == true) baseDbLvl = dbLvl[fileNum];
-  else baseDbLvl = bgDbLvl[bgFileNum];
   
-  if (msecs > 40)
+  if (msecs > 40) //peak levels
   {
     if (peak1.available() && peak2.available())
     {
@@ -179,6 +189,8 @@ void loop()
     }
   }
 }
+
+//-------------------- Support functions --------------------//
 
 void read_pushbuttons()
 {
