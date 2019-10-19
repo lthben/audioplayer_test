@@ -1,7 +1,7 @@
 /*
   Author: Benjamin Low (Lthben@gmail.com)
   Date: Oct 2019
-  Description: 6 buttons. 6 sounds. A pair of neon flex led strips as a VU meter during playback. Teensy 3.2 with audio shield.
+  Description: Teensy 3.2 with audio shield. 6 buttons for 6 sounds for both sound sculptures. A pair of neon flex led strips as a VU meter during playback for all sounds. Idle mode is a background sound playback.   
 */
 
 //-------------------- USER DEFINED SETTINGS --------------------//
@@ -220,10 +220,10 @@ void loop()
 
       FastLED.show();
 
-      Serial.print(leftPeak);
-      Serial.print(", ");
-      Serial.print(rightPeak);
-      Serial.println();
+      // Serial.print(leftPeak);
+      // Serial.print(", ");
+      // Serial.print(rightPeak);
+      // Serial.println();
     }
   }
 }
