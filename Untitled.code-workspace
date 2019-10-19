@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"name": "uv_sculptures",
+			"path": "/Users/benjaminlow/Documents/PlatformIO/Projects/uv_sculptures"
+		},
+		{
+			"name": "sound_sculptures",
+			"path": "/Users/benjaminlow/Documents/PlatformIO/Projects/sound_sculptures"
+		}
+	],
+	"settings": {
+		"terminal.integrated.env.osx": {
+			"PATH": "/Users/benjaminlow/.platformio/penv/bin:/Users/benjaminlow/.platformio/penv:/Users/benjaminlow/anaconda3/bin:/Library/Frameworks/Python.framework/Versions/3.6/bin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/Users/benjaminlow/.node_modules_global/bin:/bin:/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/go/bin:/opt/X11/bin:/usr/local/git/bin:/Users/benjaminlow/.rvm/bin:/Users/benjaminlow/.rvm/bin",
+			"PLATFORMIO_CALLER": "vscode"
+		}
+	}
+}
