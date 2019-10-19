@@ -6,17 +6,23 @@
 
 //-------------------- USER DEFINED SETTINGS --------------------//
 
-const int NUMFILES = 6, NUMBGFILES = 3; 
+const int NUMFILES = 6, NUMBGFILES = 3;
 
-//SDcard file names must have < 10 characters and only alphanumeric
-const char *playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"}; 
-const int dbLvl[NUMFILES] = {69, 50, 58, 47, 85, 72}; //base db levels
+//SDcard file names must have < 10 characters and only uppercase alphanumeric.
+//Comment out either William or Jimmy depending on coding for which of the two installations.
 
-const char *bgPlaylist[NUMBGFILES] = {"WILLBG1.WAV", "WILLBG2.WAV", "WILLBG3.WAV"};
-const int bgDbLvl[NUMBGFILES] = {78, 78, 78};
+// const char *playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"};
+// const int dbLvl[NUMFILES] = {69, 50, 58, 47, 85, 72}; //base db levels
+const char *playlist[NUMFILES] = {"JIMMY1.WAV", "JIMMY2.WAV", "JIMMY3.WAV", "JIMMY4.WAV", "JIMMY5.WAV", "JIMMY6.WAV"};
+const int dbLvl[NUMFILES] = {55, 53, 51, 60, 56, 55}; //2 & 4 of 1 - 6 are jet sounds
+
+// const char *bgPlaylist[NUMBGFILES] = {"WILLBG1.WAV", "WILLBG2.WAV", "WILLBG3.WAV"};
+// const int bgDbLvl[NUMBGFILES] = {78, 78, 78};
+const char *bgPlaylist[NUMBGFILES] = {"JIMBG1.WAV", "JIMBG2.WAV", "JIMBG3.WAV"};
+const int bgDbLvl[NUMBGFILES] = {51, 52, 56};
 
 const float MASTERVOL = 0.7; //0 - 1
-#define NUM_LEDS 26 //10cm per pixel
+#define NUM_LEDS 26          //10cm per pixel
 #define BRIGHTNESS 255
 
 //-------------------- Audio --------------------//
@@ -38,7 +44,8 @@ AudioConnection patchCord4(playSdWav1, 1, peak2, 0);
 AudioControlSGTL5000 sgtl5000_1;
 
 int fileNum = 0, bgFileNum = 0; // which background file to play
-int baseDbLvl; //of the current sound playing
+int baseDbLvl;                  //of the current sound playing
+bool isJetSound;
 elapsedMillis msecs; //for peak sampling
 
 // Use these with the Teensy Audio Shield
@@ -55,7 +62,7 @@ Bounce button3 = Bounce(3, 15);
 Bounce button4 = Bounce(4, 15);
 Bounce button5 = Bounce(5, 15);
 
-bool isButtonPressed = false; //track response to button triggered 
+bool isButtonPressed = false; //track response to button triggered
 
 //-------------------- Light --------------------//
 #include <FastLED.h>
@@ -64,7 +71,7 @@ bool isButtonPressed = false; //track response to button triggered
 #define RSTRIP_PIN 8
 
 #define LED_TYPE UCS1903
-#define COLOR_ORDER GRB //Yes! GRB! 
+#define COLOR_ORDER GRB //Yes! GRB!
 
 CRGB lstrip[NUM_LEDS];
 CRGB rstrip[NUM_LEDS];
@@ -115,29 +122,51 @@ void loop()
 {
   read_pushbuttons();
 
-  if (isButtonPressed == true) //process response to button press
+  //Respond to button press
+  if (isButtonPressed == true)
   {
-    if (playSdWav1.isPlaying() == true) playSdWav1.stop();
+    isButtonPressed = false; //ready to start listening again for button presses
+
+    if (playSdWav1.isPlaying() == true)
+    {
+      playSdWav1.stop();
+    }
     const char *filename = playlist[fileNum];
+
+    String string1 = String(filename);
+    String string2 = String("JIMMY2.WAV");
+    String string3 = String("JIMMY4.WAV");
+    if (string1 == string2 || string1 == string3)
+    {
+      isJetSound = true;
+      // Serial.println("is jet sound: TRUE");
+    }
+    else
+    {
+      isJetSound = false;
+      // Serial.println("is jet sound: FALSE");
+    }
+
     playSdWav1.play(filename);
     delay(10);
     Serial.print("Start playing ");
     Serial.println(filename);
     baseDbLvl = dbLvl[fileNum];
-    isButtonPressed = false; //ready to start listening again for button presses
   }
 
-  if (playSdWav1.isPlaying() == false) //idle mode
+  //Idle mode
+  if (playSdWav1.isPlaying() == false)
   {
-    bgFileNum = (bgFileNum+1) % NUMBGFILES;
+    bgFileNum = (bgFileNum + 1) % NUMBGFILES; //play next background sound
     const char *filename = bgPlaylist[bgFileNum];
-    playSdWav1.play(filename); 
+    playSdWav1.play(filename);
     delay(10);
     Serial.print("Start playing ");
-    Serial.println(filename); 
+    Serial.println(filename);
     baseDbLvl = bgDbLvl[bgFileNum];
   }
-  
+
+  //Visualise sound volume levels
   if (msecs > 40) //peak levels
   {
     if (peak1.available() && peak2.available())
@@ -145,8 +174,17 @@ void loop()
       msecs = 0;
       float leftNumber = peak1.read(); //0.0 - 1.0
       float rightNumber = peak2.read();
-      int leftPeak = ((leftNumber * 20.0) + baseDbLvl) / 100.0 * NUM_LEDS;
-      int rightPeak = ((rightNumber * 20.0) + baseDbLvl) / 100.0 * NUM_LEDS;
+      int leftPeak, rightPeak;
+      if (!isJetSound) //not jet sound
+      {
+        leftPeak = ((leftNumber * 20.0) + baseDbLvl) / 100.0 * NUM_LEDS;
+        rightPeak = ((rightNumber * 20.0) + baseDbLvl) / 100.0 * NUM_LEDS;
+      }
+      else //louder for jet sounds
+      {
+        leftPeak = ((leftNumber * 50.0) + baseDbLvl) / 100.0 * NUM_LEDS;
+        rightPeak = ((rightNumber * 50.0) + baseDbLvl) / 100.0 * NUM_LEDS;
+      }
 
       //left channel strip
       for (int i = 0; i < NUM_LEDS; i++)
@@ -154,7 +192,7 @@ void loop()
         if (i <= leftPeak)
         {
           if (i >= int(0.9 * NUM_LEDS))
-            lstrip[i] = CRGB::Red; //above 90dB
+            lstrip[i] = CRGB::Red;           //above 90dB
           else if (i >= int(0.8 * NUM_LEDS)) //above 80dB
             lstrip[i] = CRGB::Yellow;
           else
@@ -194,45 +232,52 @@ void loop()
 
 void read_pushbuttons()
 {
-  button0.update();  
+  button0.update();
+  button1.update();
+  button2.update();
+  button3.update();
+  button4.update();
+  button5.update();
+
   if (button0.fallingEdge())
   {
-    isButtonPressed = true; 
+    isButtonPressed = true;
     fileNum = 0;
+    Serial.println("button0 pressed");
   }
 
-  button1.update();
   if (button1.fallingEdge())
   {
-    isButtonPressed = true; 
+    isButtonPressed = true;
     fileNum = 1;
+    Serial.println("button1 pressed");
   }
-  
-  button2.update();
+
   if (button2.fallingEdge())
   {
-    isButtonPressed = true; 
+    isButtonPressed = true;
     fileNum = 2;
+    Serial.println("button2 pressed");
   }
 
-  button3.update();
   if (button3.fallingEdge())
   {
-    isButtonPressed = true; 
+    isButtonPressed = true;
     fileNum = 3;
+    Serial.println("button3 pressed");
   }
 
-  button4.update();
   if (button4.fallingEdge())
   {
-    isButtonPressed = true; 
+    isButtonPressed = true;
     fileNum = 4;
+    Serial.println("button4 pressed");
   }
 
-  button5.update();
   if (button5.fallingEdge())
   {
-    isButtonPressed = true; 
+    isButtonPressed = true;
     fileNum = 5;
-  }      
+    Serial.println("button5 pressed");
+  }
 }
