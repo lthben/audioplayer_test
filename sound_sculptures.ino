@@ -28,6 +28,7 @@ const int bgDbLvl[NUMBGFILES] = {51, 52, 56};
 const float MASTERVOL = 0.7; //0 - 1
 #define NUM_LEDS 26          //10cm per pixel
 #define BRIGHTNESS 255
+#define UPDATES_PER_SECOND 100 //speed of light animation 
 
 //-------------------- Audio --------------------//
 #include <Audio.h>
@@ -79,8 +80,6 @@ bool isButtonPressed = false; //track response to button triggered
 
 CRGB lstrip[NUM_LEDS];
 CRGB rstrip[NUM_LEDS];
-
-#define UPDATES_PER_SECOND 100
 
 //-------------------- Setup --------------------//
 
@@ -223,6 +222,7 @@ void loop()
       }
 
       FastLED.show();
+      FastLED.delay(1000 / UPDATES_PER_SECOND);
 
       // Serial.print(leftPeak);
       // Serial.print(", ");
