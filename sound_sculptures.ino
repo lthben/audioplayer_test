@@ -8,35 +8,55 @@
       Idle mode is a background sound playback.   
 */
 
-//-------------------- USER DEFINED SETTINGS --------------------//
-
-const int NUMFILES = 6, NUMBGFILES = 3;
-
-//SDcard file names must have < 10 characters and only uppercase alphanumeric.
-//Comment out either William or Jimmy depending on coding for which of the two installations.
-
-// const char *playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"};
-// const int dbLvl[NUMFILES] = {69, 50, 58, 47, 85, 72}; //base db levels
-const char *playlist[NUMFILES] = {"JIMMY1.WAV", "JIMMY2.WAV", "JIMMY3.WAV", "JIMMY4.WAV", "JIMMY5.WAV", "JIMMY6.WAV"};
-const int dbLvl[NUMFILES] = {55, 53, 51, 60, 56, 55}; //2 & 4 of 1 - 6 are jet sounds
-
-// const char *bgPlaylist[NUMBGFILES] = {"WILLBG1.WAV", "WILLBG2.WAV", "WILLBG3.WAV"};
-// const int bgDbLvl[NUMBGFILES] = {78, 78, 78};
-const char *bgPlaylist[NUMBGFILES] = {"JIMBG1.WAV", "JIMBG2.WAV", "JIMBG3.WAV"};
-const int bgDbLvl[NUMBGFILES] = {51, 52, 56};
-
-const float MASTERVOL = 0.7; //0 - 1
-#define NUM_LEDS 26          //10cm per pixel
-#define BRIGHTNESS 255
-#define UPDATES_PER_SECOND 100 //speed of light animation 
-
-//-------------------- Audio --------------------//
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
 #include <Bounce.h>
+#include <FastLED.h>
+
+//-------------------- USER DEFINED SETTINGS --------------------//
+
+//Comment out one of the two below
+// #define __JIMMY__ 
+#define __WILLIAM__
+
+const int NUMFILES = 6, NUMBGFILES = 3;
+
+//SDcard file names must have < 10 characters and only uppercase alphanumeric.
+// const char *w_playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"};
+String w_playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"};
+int w_dbLvl[NUMFILES] = {69, 50, 58, 47, 85, 72}; //base db levels
+// char *j_playlist[NUMFILES] = {"JIMMY1.WAV", "JIMMY2.WAV", "JIMMY3.WAV", "JIMMY4.WAV", "JIMMY5.WAV", "JIMMY6.WAV"};
+String j_playlist[NUMFILES] = {"JIMMY1.WAV", "JIMMY2.WAV", "JIMMY3.WAV", "JIMMY4.WAV", "JIMMY5.WAV", "JIMMY6.WAV"};
+int j_dbLvl[NUMFILES] = {55, 53, 51, 60, 56, 55}; //2 & 4 of 1 - 6 are jet sounds
+
+String w_bgPlaylist[NUMBGFILES] = {"WILLBG1.WAV", "WILLBG2.WAV", "WILLBG3.WAV"};
+int w_bgDbLvl[NUMBGFILES] = {78, 78, 78};
+String j_bgPlaylist[NUMBGFILES] = {"JIMBG1.WAV", "JIMBG2.WAV", "JIMBG3.WAV"};
+int j_bgDbLvl[NUMBGFILES] = {51, 52, 56};
+
+const float MASTERVOL = 0.7; //0 - 1
+#define NUM_LEDS 26          //10cm per pixel
+#define BRIGHTNESS 255
+#define UPDATES_PER_SECOND 1000 //speed of light animation
+
+//-------------------- Audio --------------------//
+
+#if defined(__WILLIAM__)
+String playlist[NUMFILES] = { w_playlist[0], w_playlist[1], w_playlist[2], w_playlist[3], w_playlist[4], w_playlist[5] };
+int dbLvl[NUMFILES] = { w_dbLvl[0] , w_dbLvl[1], w_dbLvl[2], w_dbLvl[3], w_dbLvl[4], w_dbLvl[5] };
+String bgPlaylist[NUMBGFILES] = { w_bgPlaylist[0], w_bgPlaylist[1], w_bgPlaylist[2] };
+int bgDbLvl[NUMBGFILES] = { w_bgDbLvl[0], w_bgDbLvl[1], w_bgDbLvl[2] }; 
+#elif defined(__JIMMY__) 
+String playlist[NUMFILES] = { j_playlist[0], j_playlist[1], j_playlist[2], j_playlist[3], j_playlist[4], j_playlist[5] };
+int dbLvl[] = { j_dbLvl[0] , j_dbLvl[1], j_dbLvl[2], j_dbLvl[3], j_dbLvl[4], j_dbLvl[5] };
+String bgPlaylist[NUMBGFILES] = { j_bgPlaylist[0], j_bgPlaylist[1], j_bgPlaylist[2] };
+int bgDbLvl[] = { j_bgDbLvl[0], j_bgDbLvl[1], j_bgDbLvl[2] }; 
+#else
+#error "invalid selection for __WILLIAM__ or __JIMMY__"
+#endif
 
 AudioPlaySdWav playSdWav1;
 AudioAnalyzePeak peak1;
@@ -70,8 +90,6 @@ Bounce button5 = Bounce(5, 15);
 bool isButtonPressed = false; //track response to button triggered
 
 //-------------------- Light --------------------//
-#include <FastLED.h>
-
 #define LSTRIP_PIN 6
 #define RSTRIP_PIN 8
 
@@ -97,7 +115,6 @@ void setup()
   AudioMemory(8);
 
   sgtl5000_1.enable();
-
   sgtl5000_1.volume(MASTERVOL);
 
   SPI.setMOSI(SDCARD_MOSI_PIN);
@@ -134,7 +151,7 @@ void loop()
     {
       playSdWav1.stop();
     }
-    const char *filename = playlist[fileNum];
+    String filename = playlist[fileNum];
 
     String string1 = String(filename);
     String string2 = String("JIMMY2.WAV");
@@ -150,10 +167,12 @@ void loop()
       // Serial.println("is jet sound: FALSE");
     }
 
-    playSdWav1.play(filename);
+    char buf[filename.length()+1];
+    filename.toCharArray(buf, filename.length()+1);
+    playSdWav1.play(buf);
     delay(10);
     Serial.print("Start playing ");
-    Serial.println(filename);
+    Serial.println(buf);
     baseDbLvl = dbLvl[fileNum];
   }
 
@@ -161,11 +180,14 @@ void loop()
   if (playSdWav1.isPlaying() == false)
   {
     bgFileNum = (bgFileNum + 1) % NUMBGFILES; //play next background sound
-    const char *filename = bgPlaylist[bgFileNum];
-    playSdWav1.play(filename);
+    String filename = bgPlaylist[bgFileNum];
+    
+    char buf[filename.length()+1];
+    filename.toCharArray(buf, filename.length()+1);
+    playSdWav1.play(buf);
     delay(10);
     Serial.print("Start playing ");
-    Serial.println(filename);
+    Serial.println(buf);
     baseDbLvl = bgDbLvl[bgFileNum];
   }
 
