@@ -25,10 +25,8 @@
 const int NUMFILES = 6, NUMBGFILES = 3;
 
 //SDcard file names must have < 10 characters and only uppercase alphanumeric.
-// const char *w_playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"};
 String w_playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"};
-int w_dbLvl[NUMFILES] = {69, 50, 58, 47, 85, 72}; //base db levels
-// char *j_playlist[NUMFILES] = {"JIMMY1.WAV", "JIMMY2.WAV", "JIMMY3.WAV", "JIMMY4.WAV", "JIMMY5.WAV", "JIMMY6.WAV"};
+int w_dbLvl[NUMFILES] = {72, 85, 50, 47, 58, 69}; //base db levels
 String j_playlist[NUMFILES] = {"JIMMY1.WAV", "JIMMY2.WAV", "JIMMY3.WAV", "JIMMY4.WAV", "JIMMY5.WAV", "JIMMY6.WAV"};
 int j_dbLvl[NUMFILES] = {55, 53, 51, 60, 56, 55}; //2 & 4 of 1 - 6 are jet sounds
 
