@@ -5,7 +5,7 @@
       Teensy 3.2 with audio shield. 
       Both sculptures have 6 buttons for activating 6 different sounds. 
       A pair of neon flex led strips acting as a VU meter during playback for all sounds. 
-      Idle mode is a background sound playback.   
+      Idle mode has a background sound playback.   
 */
 
 #include <Audio.h>
@@ -19,8 +19,8 @@
 //-------------------- USER DEFINED SETTINGS --------------------//
 
 //Comment out one of the two below
-// #define __JIMMY__ 
 #define __WILLIAM__
+// #define __JIMMY__ 
 
 const int NUMFILES = 6, NUMBGFILES = 3;
 
@@ -38,7 +38,7 @@ int j_bgDbLvl[NUMBGFILES] = {51, 52, 56};
 const float MASTERVOL = 0.7; //0 - 1
 #define NUM_LEDS 26          //10cm per pixel
 #define BRIGHTNESS 255
-#define UPDATES_PER_SECOND 1000 //speed of light animation
+#define UPDATES_PER_SECOND 1000 //speed of light animation. Typical value is 120. Higher speed for faster VU level response. 
 
 //-------------------- Audio --------------------//
 
@@ -77,19 +77,19 @@ elapsedMillis msecs; //for peak sampling
 #define SDCARD_SCK_PIN 14
 
 //-------------------- Buttons --------------------//
-
+//make sure pinMode is also set to the right pins
 Bounce button0 = Bounce(0, 15); // 15 = 15 ms debounce time
 Bounce button1 = Bounce(1, 15);
 Bounce button2 = Bounce(2, 15);
 Bounce button3 = Bounce(3, 15);
-Bounce button4 = Bounce(4, 15);
-Bounce button5 = Bounce(5, 15);
+Bounce button4 = Bounce(23, 15);
+Bounce button5 = Bounce(22, 15);
 
 bool isButtonPressed = false; //track response to button triggered
 
 //-------------------- Light --------------------//
-#define LSTRIP_PIN 6
-#define RSTRIP_PIN 8
+#define LSTRIP_PIN 21
+#define RSTRIP_PIN 20
 
 #define LED_TYPE UCS1903
 #define COLOR_ORDER GRB //Yes! GRB!
@@ -105,8 +105,8 @@ void setup()
   pinMode(1, INPUT_PULLUP);
   pinMode(2, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
-  pinMode(4, INPUT_PULLUP);
-  pinMode(5, INPUT_PULLUP);
+  pinMode(23, INPUT_PULLUP);
+  pinMode(22, INPUT_PULLUP);
 
   Serial.begin(9600);
 
