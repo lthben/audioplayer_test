@@ -82,8 +82,8 @@ Bounce button0 = Bounce(0, 15); // 15 = 15 ms debounce time
 Bounce button1 = Bounce(1, 15);
 Bounce button2 = Bounce(2, 15);
 Bounce button3 = Bounce(3, 15);
-Bounce button4 = Bounce(23, 15);
-Bounce button5 = Bounce(22, 15);
+Bounce button4 = Bounce(19, 15);
+Bounce button5 = Bounce(18, 15);
 
 bool isButtonPressed = false; //track response to button triggered
 
@@ -105,8 +105,8 @@ void setup()
   pinMode(1, INPUT_PULLUP);
   pinMode(2, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
-  pinMode(23, INPUT_PULLUP);
-  pinMode(22, INPUT_PULLUP);
+  pinMode(19, INPUT_PULLUP);
+  pinMode(18, INPUT_PULLUP);
 
   Serial.begin(9600);
 
