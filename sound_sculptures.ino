@@ -19,8 +19,10 @@
 //-------------------- USER DEFINED SETTINGS --------------------//
 
 //Comment out one of the two below
-#define __WILLIAM__
-// #define __JIMMY__ 
+// #define __WILLIAM__
+#define __JIMMY__ 
+
+const int J_NUMLEDS = 42, W_NUMLEDS = 50;
 
 const int NUMFILES = 6, NUMBGFILES = 3;
 
@@ -36,7 +38,6 @@ String j_bgPlaylist[NUMBGFILES] = {"JIMBG1.WAV", "JIMBG2.WAV", "JIMBG3.WAV"};
 int j_bgDbLvl[NUMBGFILES] = {51, 52, 56};
 
 const float MASTERVOL = 0.7; //0 - 1
-#define NUM_LEDS 26          //10cm per pixel
 #define BRIGHTNESS 255
 #define UPDATES_PER_SECOND 1000 //speed of light animation. Typical value is 120. Higher speed for faster VU level response. 
 
@@ -47,11 +48,13 @@ String playlist[NUMFILES] = { w_playlist[0], w_playlist[1], w_playlist[2], w_pla
 int dbLvl[NUMFILES] = { w_dbLvl[0] , w_dbLvl[1], w_dbLvl[2], w_dbLvl[3], w_dbLvl[4], w_dbLvl[5] };
 String bgPlaylist[NUMBGFILES] = { w_bgPlaylist[0], w_bgPlaylist[1], w_bgPlaylist[2] };
 int bgDbLvl[NUMBGFILES] = { w_bgDbLvl[0], w_bgDbLvl[1], w_bgDbLvl[2] }; 
+const int NUM_LEDS = W_NUMLEDS;
 #elif defined(__JIMMY__) 
 String playlist[NUMFILES] = { j_playlist[0], j_playlist[1], j_playlist[2], j_playlist[3], j_playlist[4], j_playlist[5] };
 int dbLvl[] = { j_dbLvl[0] , j_dbLvl[1], j_dbLvl[2], j_dbLvl[3], j_dbLvl[4], j_dbLvl[5] };
 String bgPlaylist[NUMBGFILES] = { j_bgPlaylist[0], j_bgPlaylist[1], j_bgPlaylist[2] };
 int bgDbLvl[] = { j_bgDbLvl[0], j_bgDbLvl[1], j_bgDbLvl[2] }; 
+const int NUM_LEDS = J_NUMLEDS;
 #else
 #error "invalid selection for __WILLIAM__ or __JIMMY__"
 #endif
