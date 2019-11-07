@@ -37,7 +37,7 @@ int w_bgDbLvl[NUMBGFILES] = {78, 78, 78};
 String j_bgPlaylist[NUMBGFILES] = {"JIMBG1.WAV", "JIMBG2.WAV", "JIMBG3.WAV"};
 int j_bgDbLvl[NUMBGFILES] = {51, 52, 56};
 
-const float MASTERVOL = 0.7; //0 - 1
+const float MASTERVOL = 0.75; //0 - 1
 #define BRIGHTNESS 255
 #define UPDATES_PER_SECOND 1000 //speed of light animation. Typical value is 120. Higher speed for faster VU level response. 
 
