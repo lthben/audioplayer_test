@@ -15,16 +15,20 @@
 #include <SerialFlash.h>
 #include <Bounce.h>
 #include <FastLED.h>
+#include <elapsedMillis.h>
 
 //-------------------- USER DEFINED SETTINGS --------------------//
 
 //Comment out one of the two below
 // #define __WILLIAM__
-#define __JIMMY__ 
+#define __JIMMY__
 
-const int J_NUMLEDS = 42, W_NUMLEDS = 50;
+const int J_NUMLEDS = 42, W_NUMLEDS = 53;
 
 const int NUMFILES = 6, NUMBGFILES = 3;
+
+CRGB j_color = CRGB::Purple;
+CRGB w_color = CRGB::DeepPink;
 
 //SDcard file names must have < 10 characters and only uppercase alphanumeric.
 String w_playlist[NUMFILES] = {"WILLIAM1.WAV", "WILLIAM2.WAV", "WILLIAM3.WAV", "WILLIAM4.WAV", "WILLIAM5.WAV", "WILLIAM6.WAV"};
@@ -37,24 +41,28 @@ int w_bgDbLvl[NUMBGFILES] = {78, 78, 78};
 String j_bgPlaylist[NUMBGFILES] = {"JIMBG1.WAV", "JIMBG2.WAV", "JIMBG3.WAV"};
 int j_bgDbLvl[NUMBGFILES] = {51, 52, 56};
 
-const float MASTERVOL = 0.75; //0 - 1
+const float MASTERVOL = 0.7; //0 - 1
 #define BRIGHTNESS 255
-#define UPDATES_PER_SECOND 1000 //speed of light animation. Typical value is 120. Higher speed for faster VU level response. 
+#define UPDATES_PER_SECOND 1000 //speed of light animation. Typical value is 120. Higher speed for faster VU level response.
 
 //-------------------- Audio --------------------//
 
 #if defined(__WILLIAM__)
-String playlist[NUMFILES] = { w_playlist[0], w_playlist[1], w_playlist[2], w_playlist[3], w_playlist[4], w_playlist[5] };
-int dbLvl[NUMFILES] = { w_dbLvl[0] , w_dbLvl[1], w_dbLvl[2], w_dbLvl[3], w_dbLvl[4], w_dbLvl[5] };
-String bgPlaylist[NUMBGFILES] = { w_bgPlaylist[0], w_bgPlaylist[1], w_bgPlaylist[2] };
-int bgDbLvl[NUMBGFILES] = { w_bgDbLvl[0], w_bgDbLvl[1], w_bgDbLvl[2] }; 
+String playlist[NUMFILES] = {w_playlist[0], w_playlist[1], w_playlist[2], w_playlist[3], w_playlist[4], w_playlist[5]};
+int dbLvl[NUMFILES] = {w_dbLvl[0], w_dbLvl[1], w_dbLvl[2], w_dbLvl[3], w_dbLvl[4], w_dbLvl[5]};
+String bgPlaylist[NUMBGFILES] = {w_bgPlaylist[0], w_bgPlaylist[1], w_bgPlaylist[2]};
+int bgDbLvl[NUMBGFILES] = {w_bgDbLvl[0], w_bgDbLvl[1], w_bgDbLvl[2]};
 const int NUM_LEDS = W_NUMLEDS;
-#elif defined(__JIMMY__) 
-String playlist[NUMFILES] = { j_playlist[0], j_playlist[1], j_playlist[2], j_playlist[3], j_playlist[4], j_playlist[5] };
-int dbLvl[] = { j_dbLvl[0] , j_dbLvl[1], j_dbLvl[2], j_dbLvl[3], j_dbLvl[4], j_dbLvl[5] };
-String bgPlaylist[NUMBGFILES] = { j_bgPlaylist[0], j_bgPlaylist[1], j_bgPlaylist[2] };
-int bgDbLvl[] = { j_bgDbLvl[0], j_bgDbLvl[1], j_bgDbLvl[2] }; 
+const int SCULPTURE_ID = 1;
+CRGB myColor = w_color;
+#elif defined(__JIMMY__)
+String playlist[NUMFILES] = {j_playlist[0], j_playlist[1], j_playlist[2], j_playlist[3], j_playlist[4], j_playlist[5]};
+int dbLvl[] = {j_dbLvl[0], j_dbLvl[1], j_dbLvl[2], j_dbLvl[3], j_dbLvl[4], j_dbLvl[5]};
+String bgPlaylist[NUMBGFILES] = {j_bgPlaylist[0], j_bgPlaylist[1], j_bgPlaylist[2]};
+int bgDbLvl[] = {j_bgDbLvl[0], j_bgDbLvl[1], j_bgDbLvl[2]};
 const int NUM_LEDS = J_NUMLEDS;
+const int SCULPTURE_ID = 2;
+CRGB myColor = j_color;
 #else
 #error "invalid selection for __WILLIAM__ or __JIMMY__"
 #endif
@@ -89,16 +97,23 @@ Bounce button4 = Bounce(19, 15);
 Bounce button5 = Bounce(18, 15);
 
 bool isButtonPressed = false; //track response to button triggered
+bool isIdleMode = true;
 
 //-------------------- Light --------------------//
 #define LSTRIP_PIN 21
 #define RSTRIP_PIN 20
 
-#define LED_TYPE UCS1903
+#define LED_TYPE WS2811
 #define COLOR_ORDER GRB //Yes! GRB!
 
 CRGB lstrip[NUM_LEDS];
 CRGB rstrip[NUM_LEDS];
+
+elapsedMillis ledmsecs;
+long randNumber;
+bool hasDoneRun;     //tracks whether the idle animation has completed a run
+bool isUpDir = true; //tracks direction of running pixel
+int ledCounter;      //tracks running pixel position
 
 //-------------------- Setup --------------------//
 
@@ -130,8 +145,8 @@ void setup()
   }
   delay(2000); //power up safety delay
 
-  FastLED.addLeds<UCS1903, LSTRIP_PIN, COLOR_ORDER>(lstrip, NUM_LEDS);
-  FastLED.addLeds<UCS1903, RSTRIP_PIN, COLOR_ORDER>(rstrip, NUM_LEDS);
+  FastLED.addLeds<LED_TYPE, LSTRIP_PIN, COLOR_ORDER>(lstrip, NUM_LEDS);
+  FastLED.addLeds<LED_TYPE, RSTRIP_PIN, COLOR_ORDER>(rstrip, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
 
   delay(10);
@@ -147,6 +162,7 @@ void loop()
   if (isButtonPressed == true)
   {
     isButtonPressed = false; //ready to start listening again for button presses
+    isIdleMode = false;
 
     if (playSdWav1.isPlaying() == true)
     {
@@ -168,8 +184,8 @@ void loop()
       // Serial.println("is jet sound: FALSE");
     }
 
-    char buf[filename.length()+1];
-    filename.toCharArray(buf, filename.length()+1);
+    char buf[filename.length() + 1];
+    filename.toCharArray(buf, filename.length() + 1);
     playSdWav1.play(buf);
     delay(10);
     Serial.print("Start playing ");
@@ -180,11 +196,13 @@ void loop()
   //Idle mode
   if (playSdWav1.isPlaying() == false)
   {
+    isIdleMode = true;
+
     bgFileNum = (bgFileNum + 1) % NUMBGFILES; //play next background sound
     String filename = bgPlaylist[bgFileNum];
-    
-    char buf[filename.length()+1];
-    filename.toCharArray(buf, filename.length()+1);
+
+    char buf[filename.length() + 1];
+    filename.toCharArray(buf, filename.length() + 1);
     playSdWav1.play(buf);
     delay(10);
     Serial.print("Start playing ");
@@ -193,7 +211,7 @@ void loop()
   }
 
   //Visualise sound volume levels
-  if (msecs > 40) //peak levels
+  if (msecs > 40 && isIdleMode == false) //peak levels
   {
     if (peak1.available() && peak2.available())
     {
@@ -243,19 +261,77 @@ void loop()
         else
           rstrip[i] = CRGB::Black;
       }
-
-      FastLED.show();
-      FastLED.delay(1000 / UPDATES_PER_SECOND);
-
       // Serial.print(leftPeak);
       // Serial.print(", ");
       // Serial.print(rightPeak);
       // Serial.println();
     }
   }
+
+  if (isIdleMode == true)
+  {
+    run_idle_animation();
+  }
+
+  FastLED.show();
+  FastLED.delay(1000 / UPDATES_PER_SECOND);
 }
 
 //-------------------- Support functions --------------------//
+
+void run_idle_animation()
+{
+  if (hasDoneRun == false)
+  {
+    if (ledmsecs > int(randNumber / NUM_LEDS))
+    {
+      if (isUpDir == true)
+      {
+        ledCounter++;
+        if (ledCounter == NUM_LEDS - 1)
+        {
+          lstrip[ledCounter] = CRGB::Black;
+          rstrip[ledCounter] = CRGB::Black;
+          hasDoneRun = true;
+          isUpDir = false;
+        }
+        else
+        {
+          lstrip[ledCounter] = myColor;
+          rstrip[ledCounter] = myColor;
+          lstrip[ledCounter - 1] = CRGB::Black;
+          rstrip[ledCounter - 1] = CRGB::Black;
+          ledmsecs = 0;
+        }
+      }
+      else
+      { //isUpDir is false
+        ledCounter--;
+        if (ledCounter == 0)
+        {
+          lstrip[1] = CRGB:: Black;
+          rstrip[1] = CRGB:: Black;
+          hasDoneRun = true;
+          isUpDir = true;
+        }
+        else
+        {
+          lstrip[ledCounter] = myColor;
+          rstrip[ledCounter] = myColor;
+          lstrip[ledCounter + 1] = CRGB::Black;
+          rstrip[ledCounter + 1] = CRGB::Black;
+          ledmsecs = 0;
+        } 
+      }
+    }
+  }
+  else //hasDoneRun is true
+  { //generate a new random led speed
+    randNumber = random(2000, 6000);
+    ledmsecs = 0;
+    hasDoneRun = false; //begin a new run
+  }
+}
 
 void read_pushbuttons()
 {
