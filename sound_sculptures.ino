@@ -20,8 +20,8 @@
 //-------------------- USER DEFINED SETTINGS --------------------//
 
 //Comment out one of the two below
-// #define __WILLIAM__
-#define __JIMMY__
+#define __WILLIAM__
+// #define __JIMMY__
 
 const int J_NUMLEDS = 42, W_NUMLEDS = 53;
 
