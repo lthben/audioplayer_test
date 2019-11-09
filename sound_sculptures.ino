@@ -97,7 +97,8 @@ Bounce button4 = Bounce(19, 15);
 Bounce button5 = Bounce(18, 15);
 
 bool isButtonPressed = false; //track response to button triggered
-bool isIdleMode = true;
+bool isIdleMode = true; 
+bool hasTransit = false; //tracking whether to turn off leds once during transition
 
 //-------------------- Light --------------------//
 #define LSTRIP_PIN 21
@@ -163,6 +164,7 @@ void loop()
   {
     isButtonPressed = false; //ready to start listening again for button presses
     isIdleMode = false;
+    hasTransit = false; //has yet to transit to idle state
 
     if (playSdWav1.isPlaying() == true)
     {
@@ -196,7 +198,13 @@ void loop()
   //Idle mode
   if (playSdWav1.isPlaying() == false)
   {
-    isIdleMode = true;
+    isIdleMode = true; 
+
+    if (hasTransit == false)
+    {
+      turn_off_leds();
+      hasTransit = true;
+    }
 
     bgFileNum = (bgFileNum + 1) % NUMBGFILES; //play next background sound
     String filename = bgPlaylist[bgFileNum];
@@ -330,6 +338,15 @@ void run_idle_animation()
     randNumber = random(2000, 6000);
     ledmsecs = 0;
     hasDoneRun = false; //begin a new run
+  }
+}
+
+void turn_off_leds() 
+{
+  for (int i = 0; i<NUM_LEDS; i++)
+  {
+    lstrip[i] = CRGB::Black;
+    rstrip[i] = CRGB::Black;
   }
 }
 
