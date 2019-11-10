@@ -20,8 +20,8 @@
 //-------------------- USER DEFINED SETTINGS --------------------//
 
 //Comment out one of the two below
-#define __WILLIAM__
-// #define __JIMMY__
+// #define __WILLIAM__
+#define __JIMMY__
 
 const int J_NUMLEDS = 42, W_NUMLEDS = 53;
 
@@ -81,6 +81,8 @@ int fileNum = 0, bgFileNum = 0; // which background file to play
 int baseDbLvl;                  //of the current sound playing
 bool isJetSound;
 elapsedMillis msecs; //for peak sampling
+elapsedMillis buttonmsec; //kids button mashing, tracks time since button pressed
+const int BUTTONDELAY = 3000; //msecs button delay before listening again
 
 // Use these with the Teensy Audio Shield
 #define SDCARD_CS_PIN 10
@@ -160,8 +162,9 @@ void loop()
   read_pushbuttons();
 
   //Respond to button press
-  if (isButtonPressed == true)
+  if (isButtonPressed == true && buttonmsec > BUTTONDELAY)
   {
+    buttonmsec = 0; 
     isButtonPressed = false; //ready to start listening again for button presses
     isIdleMode = false;
     hasTransit = false; //has yet to transit to idle state
@@ -352,52 +355,55 @@ void turn_off_leds()
 
 void read_pushbuttons()
 {
-  button0.update();
-  button1.update();
-  button2.update();
-  button3.update();
-  button4.update();
-  button5.update();
-
-  if (button0.fallingEdge())
+  if (buttonmsec > BUTTONDELAY) 
   {
-    isButtonPressed = true;
-    fileNum = 0;
-    Serial.println("button0 pressed");
-  }
+    button0.update();
+    button1.update();
+    button2.update();
+    button3.update();
+    button4.update();
+    button5.update();
 
-  if (button1.fallingEdge())
-  {
-    isButtonPressed = true;
-    fileNum = 1;
-    Serial.println("button1 pressed");
-  }
+    if (button0.fallingEdge())
+    {
+      isButtonPressed = true; 
+      fileNum = 0;
+      Serial.println("button0 pressed");
+    }
 
-  if (button2.fallingEdge())
-  {
-    isButtonPressed = true;
-    fileNum = 2;
-    Serial.println("button2 pressed");
-  }
+    if (button1.fallingEdge())
+    {
+      isButtonPressed = true; 
+      fileNum = 1;
+      Serial.println("button1 pressed");
+    }
 
-  if (button3.fallingEdge())
-  {
-    isButtonPressed = true;
-    fileNum = 3;
-    Serial.println("button3 pressed");
-  }
+    if (button2.fallingEdge())
+    {
+      isButtonPressed = true; 
+      fileNum = 2;
+      Serial.println("button2 pressed");
+    }
 
-  if (button4.fallingEdge())
-  {
-    isButtonPressed = true;
-    fileNum = 4;
-    Serial.println("button4 pressed");
-  }
+    if (button3.fallingEdge())
+    {
+      isButtonPressed = true; 
+      fileNum = 3;
+      Serial.println("button3 pressed");
+    }
 
-  if (button5.fallingEdge())
-  {
-    isButtonPressed = true;
-    fileNum = 5;
-    Serial.println("button5 pressed");
+    if (button4.fallingEdge())
+    {
+      isButtonPressed = true; 
+      fileNum = 4;
+      Serial.println("button4 pressed");
+    }
+
+    if (button5.fallingEdge())
+    {
+      isButtonPressed = true; 
+      fileNum = 5;
+      Serial.println("button5 pressed");
+    }
   }
 }
