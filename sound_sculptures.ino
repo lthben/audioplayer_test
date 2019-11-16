@@ -371,35 +371,35 @@ void read_pushbuttons()
       Serial.println("button0 pressed");
     }
 
-    if (button1.fallingEdge())
+    else if (button1.fallingEdge())
     {
       isButtonPressed = true; 
       fileNum = 1;
       Serial.println("button1 pressed");
     }
 
-    if (button2.fallingEdge())
+    else if (button2.fallingEdge())
     {
       isButtonPressed = true; 
       fileNum = 2;
       Serial.println("button2 pressed");
     }
 
-    if (button3.fallingEdge())
+    else if (button3.fallingEdge())
     {
       isButtonPressed = true; 
       fileNum = 3;
       Serial.println("button3 pressed");
     }
 
-    if (button4.fallingEdge())
+    else if (button4.fallingEdge())
     {
       isButtonPressed = true; 
       fileNum = 4;
       Serial.println("button4 pressed");
     }
 
-    if (button5.fallingEdge())
+    else if (button5.fallingEdge())
     {
       isButtonPressed = true; 
       fileNum = 5;
