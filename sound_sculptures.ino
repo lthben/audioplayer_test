@@ -13,7 +13,7 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
-#include <Bounce.h>
+#include <Bounce2.h>
 #include <FastLED.h>
 #include <elapsedMillis.h>
 
@@ -80,9 +80,12 @@ AudioControlSGTL5000 sgtl5000_1;
 int fileNum = 0, bgFileNum = 0; // which background file to play
 int baseDbLvl;                  //of the current sound playing
 bool isJetSound;
-elapsedMillis msecs; //for peak sampling
-elapsedMillis buttonmsec; //kids button mashing, tracks time since button pressed
+elapsedMillis msecs;          //for peak sampling
+elapsedMillis buttonmsec;     //kids button mashing, tracks time since button pressed
 const int BUTTONDELAY = 3000; //msecs button delay before listening again
+
+String jimmy2String = String("JIMMY2.WAV");
+String jimmy4String = String("JIMMY4.WAV");
 
 // Use these with the Teensy Audio Shield
 #define SDCARD_CS_PIN 10
@@ -91,22 +94,21 @@ const int BUTTONDELAY = 3000; //msecs button delay before listening again
 
 //-------------------- Buttons --------------------//
 //make sure pinMode is also set to the right pins
-Bounce button0 = Bounce(0, 15); // 15 = 15 ms debounce time
-Bounce button1 = Bounce(1, 15);
-Bounce button2 = Bounce(2, 15);
-Bounce button3 = Bounce(3, 15);
-Bounce button4 = Bounce(19, 15);
-Bounce button5 = Bounce(18, 15);
+
+const int NUM_BUTTONS = 6;
+const uint8_t BUTTON_PINS[NUM_BUTTONS] = {0, 1, 2, 3, 19, 18};
+
+Bounce *buttons = new Bounce[NUM_BUTTONS];
 
 bool isButtonPressed = false; //track response to button triggered
-bool isIdleMode = true; 
+bool isIdleMode = true;
 bool hasTransit = false; //tracking whether to turn off leds once during transition
 
 //-------------------- Light --------------------//
 #define LSTRIP_PIN 21
 #define RSTRIP_PIN 20
 
-#define LED_TYPE WS2811
+#define LED_TYPE WS2812
 #define COLOR_ORDER GRB //Yes! GRB!
 
 CRGB lstrip[NUM_LEDS];
@@ -122,12 +124,11 @@ int ledCounter;      //tracks running pixel position
 
 void setup()
 {
-  pinMode(0, INPUT_PULLUP);
-  pinMode(1, INPUT_PULLUP);
-  pinMode(2, INPUT_PULLUP);
-  pinMode(3, INPUT_PULLUP);
-  pinMode(19, INPUT_PULLUP);
-  pinMode(18, INPUT_PULLUP);
+  for (int i = 0; i < NUM_BUTTONS; i++)
+  {
+    buttons[i].attach(BUTTON_PINS[i], INPUT_PULLUP);
+    buttons[i].interval(25);
+  }
 
   Serial.begin(9600);
 
@@ -162,9 +163,9 @@ void loop()
   read_pushbuttons();
 
   //Respond to button press
-  if (isButtonPressed == true && buttonmsec > BUTTONDELAY)
+  if (isButtonPressed == true)
   {
-    buttonmsec = 0; 
+    buttonmsec = 0;
     isButtonPressed = false; //ready to start listening again for button presses
     isIdleMode = false;
     hasTransit = false; //has yet to transit to idle state
@@ -174,19 +175,15 @@ void loop()
       playSdWav1.stop();
     }
     String filename = playlist[fileNum];
+    String filenameString = String(filename);
 
-    String string1 = String(filename);
-    String string2 = String("JIMMY2.WAV");
-    String string3 = String("JIMMY4.WAV");
-    if (string1 == string2 || string1 == string3)
+    if (filenameString == jimmy2String || filenameString == jimmy4String)
     {
       isJetSound = true;
-      // Serial.println("is jet sound: TRUE");
     }
     else
     {
       isJetSound = false;
-      // Serial.println("is jet sound: FALSE");
     }
 
     char buf[filename.length() + 1];
@@ -201,7 +198,7 @@ void loop()
   //Idle mode
   if (playSdWav1.isPlaying() == false)
   {
-    isIdleMode = true; 
+    isIdleMode = true;
 
     if (hasTransit == false)
     {
@@ -320,8 +317,8 @@ void run_idle_animation()
         ledCounter--;
         if (ledCounter == 0)
         {
-          lstrip[1] = CRGB:: Black;
-          rstrip[1] = CRGB:: Black;
+          lstrip[1] = CRGB::Black;
+          rstrip[1] = CRGB::Black;
           hasDoneRun = true;
           isUpDir = true;
         }
@@ -332,21 +329,21 @@ void run_idle_animation()
           lstrip[ledCounter + 1] = CRGB::Black;
           rstrip[ledCounter + 1] = CRGB::Black;
           ledmsecs = 0;
-        } 
+        }
       }
     }
   }
   else //hasDoneRun is true
-  { //generate a new random led speed
+  {    //generate a new random led speed
     randNumber = random(2000, 6000);
     ledmsecs = 0;
     hasDoneRun = false; //begin a new run
   }
 }
 
-void turn_off_leds() 
+void turn_off_leds()
 {
-  for (int i = 0; i<NUM_LEDS; i++)
+  for (int i = 0; i < NUM_LEDS; i++)
   {
     lstrip[i] = CRGB::Black;
     rstrip[i] = CRGB::Black;
@@ -355,55 +352,21 @@ void turn_off_leds()
 
 void read_pushbuttons()
 {
-  if (buttonmsec > BUTTONDELAY) 
+  if (buttonmsec > BUTTONDELAY)
   {
-    button0.update();
-    button1.update();
-    button2.update();
-    button3.update();
-    button4.update();
-    button5.update();
-
-    if (button0.fallingEdge())
+    for (int i = 0; i < NUM_BUTTONS; i++)
     {
-      isButtonPressed = true; 
-      fileNum = 0;
-      Serial.println("button0 pressed");
-    }
-
-    else if (button1.fallingEdge())
-    {
-      isButtonPressed = true; 
-      fileNum = 1;
-      Serial.println("button1 pressed");
-    }
-
-    else if (button2.fallingEdge())
-    {
-      isButtonPressed = true; 
-      fileNum = 2;
-      Serial.println("button2 pressed");
-    }
-
-    else if (button3.fallingEdge())
-    {
-      isButtonPressed = true; 
-      fileNum = 3;
-      Serial.println("button3 pressed");
-    }
-
-    else if (button4.fallingEdge())
-    {
-      isButtonPressed = true; 
-      fileNum = 4;
-      Serial.println("button4 pressed");
-    }
-
-    else if (button5.fallingEdge())
-    {
-      isButtonPressed = true; 
-      fileNum = 5;
-      Serial.println("button5 pressed");
+      // Update the Bounce instance :
+      buttons[i].update();
+      // If it fell, flag the need to toggle the LED
+      if (buttons[i].fell())
+      {
+        isButtonPressed = true;
+        fileNum = i;
+        Serial.print("button ");
+        Serial.print(i);
+        Serial.println(" pressed");
+      }
     }
   }
 }
