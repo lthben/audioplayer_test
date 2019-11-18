@@ -20,8 +20,8 @@
 //-------------------- USER DEFINED SETTINGS --------------------//
 
 //Comment out one of the two below
-#define __WILLIAM__
-// #define __JIMMY__
+// #define __WILLIAM__
+#define __JIMMY__
 
 const int J_NUMLEDS = 42, W_NUMLEDS = 53;
 
@@ -96,7 +96,7 @@ String jimmy4String = String("JIMMY4.WAV");
 //make sure pinMode is also set to the right pins
 
 const int NUM_BUTTONS = 6;
-const uint8_t BUTTON_PINS[NUM_BUTTONS] = {0, 1, 2, 3, 19, 18};
+const uint8_t BUTTON_PINS[NUM_BUTTONS] = {0, 1, 2, 3, 4, 5};
 
 Bounce *buttons = new Bounce[NUM_BUTTONS];
 
